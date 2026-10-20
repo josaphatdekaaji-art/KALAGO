@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalago - Delivery Food and Goods</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#035485',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet OpenStreetMap CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #leafletMap { height: 240px; border-radius: 1rem; }
+        
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            max-height: 180px;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            margin-top: 4px;
+        }
+        .autocomplete-item {
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s ease;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover {
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl opacity-0 transition-all pointer-events-none flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-sky-400"></i>
+        <span id="toastMsg">Notifikasi</span>
+    </div>
+
+    <!-- SPLASH LANDING SCREEN - RESTORED ORIGINAL DESIGN WITH 'K' LOGO & BLUE LIGHTNING BADGE -->
+    <section id="splashScreen" class="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-brand-900 to-slate-900 flex flex-col justify-between p-6 text-white max-w-md mx-auto shadow-2xl">
+        
+        <!-- Header status -->
+        <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/15">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-[10px] font-extrabold tracking-wider uppercase text-sky-200">Layanan Otomatis Ready</span>
+            </div>
+            <span class="bg-white/10 backdrop-blur-md text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider text-sky-200 border border-white/15">
+                v3.8 Gojek Clean
+            </span>
+        </div>
+
+        <!-- Center Brand Logo K with Blue Lightning Badge & Text -->
+        <div class="flex flex-col items-center text-center space-y-6 my-auto">
+            
+            <!-- Logo Graphic: White box K with Blue Lightning badge -->
+            <div class="relative group">
+                <div class="w-28 h-28 bg-white text-brand-600 rounded-3xl flex items-center justify-center font-black text-6xl shadow-2xl shadow-black/40 transform -rotate-3 transition-transform group-hover:rotate-0">
+                    K
+                </div>
+                <!-- Blue Lightning Badge -->
+                <div class="absolute -bottom-2 -right-2 bg-slate-900 text-sky-400 p-2.5 rounded-2xl text-sm font-black shadow-lg border border-slate-700 flex items-center justify-center">
+                    <i class="fa-solid fa-bolt text-sky-400"></i>
+                </div>
+            </div>
+
+            <!-- Brand Name & Text Below Logo -->
+            <div class="space-y-3 px-2">
+                <h1 class="text-4xl font-black tracking-tight text-white drop-shadow-md">KALAGO</h1>
+                <p class="text-xs font-bold text-sky-100 leading-relaxed max-w-xs mx-auto opacity-90">
+                    Layanan antar makanan, minuman, belanja, jastip paket, antar jemput dengan tarif termurah sedunia!
+                </p>
+            </div>
+
+            <!-- Service Pills -->
+            <div class="grid grid-cols-2 gap-2 w-full pt-2 text-[11px] font-extrabold text-sky-100">
+                <div class="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md py-2 px-3 rounded-2xl border border-white/10">
+                    <span>🍔</span> Makanan
+                </div>
+                <div class="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md py-2 px-3 rounded-2xl border border-white/10">
+                    <span>🧋</span> Minuman Segar
+                </div>
+                <div class="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md py-2 px-3 rounded-2xl border border-white/10">
+                    <span>🛒</span> Belanja Goods
+                </div>
+                <div class="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md py-2 px-3 rounded-2xl border border-white/10">
+                    <span>🛵</span> Antar / Jemput
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Action CTA - White "Let's Go" Button -->
+        <div class="space-y-3 pb-2">
+            <button onclick="enterDashboard()" class="w-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-black py-4 rounded-2xl shadow-2xl flex items-center justify-center gap-3 transition-all text-base border border-white/90">
+                <span>Let's Go</span>
+                <i class="fa-solid fa-arrow-right text-slate-900"></i>
+            </button>
+            <div class="text-center text-[10px] text-sky-200 font-bold tracking-wide">
+                Ongkir Murah Mulai Rp 7.000 • Tanpa Biaya Tersembunyi
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTAINER -->
+    <div id="mainContainer" class="max-w-md mx-auto bg-slate-50 min-h-screen pb-20 shadow-xl relative border-x border-slate-200/60 hidden">
+
+        <!-- CUSTOMER DASHBOARD -->
+        <div id="customerDashboardView">
+            
+            <!-- TOP BAR HEADER -->
+            <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 bg-brand-600 text-white font-black text-xl rounded-2xl flex items-center justify-center shadow-md shadow-brand-600/30">
+                            K
+                        </div>
+                        <div>
+                            <h1 class="font-black text-slate-900 text-lg leading-tight tracking-tight">KALAGO</h1>
+                            <p class="text-[10px] font-extrabold text-brand-600 uppercase tracking-wide">Delivery Food and Goods</p>
+                        </div>
+                    </div>
+
+                    <!-- Driver Mode Login Button -->
+                    <button onclick="openDriverLoginModal()" class="flex items-center gap-1.5 bg-slate-900 text-sky-400 hover:bg-slate-800 text-xs px-3 py-2 rounded-xl font-bold shadow transition-all border border-slate-700">
+                        <i class="fa-solid fa-motorcycle text-sm"></i>
+                        <span>Driver Ready</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="p-4 space-y-4">
+
+                <!-- CLEAN PROMO BANNER -->
+                <div class="bg-gradient-to-r from-slate-900 via-brand-900 to-brand-700 text-white rounded-3xl p-4 shadow-xl relative overflow-hidden">
+                    <div class="relative z-10 space-y-1">
+                        <span class="bg-brand-500 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Ongkir Murah • Rp 7.000 (Jauh/Dekat)
+                        </span>
+                        <h2 class="text-base font-black leading-snug">Pesan Apa Saja, Jadi Lebih Hemat!</h2>
+                        <p class="text-[11px] text-sky-100">Pilih layanan, isi pesanan & alamat, lalu hitung total biaya transparan seketika.</p>
+                        <div class="pt-2 flex items-center gap-2">
+                            <span class="bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-extrabold px-2 py-0.5 rounded-md">
+                                <i class="fa-solid fa-shield-halved mr-1"></i> Ramah Kantong
+                            </span>
+                            <span class="text-[10px] text-slate-300">Fast Driver Response</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-motorcycle absolute -right-3 -bottom-3 text-white/10 text-8xl"></i>
+                </div>
+
+                <!-- CUSTOMER SERVICE SELECTOR -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider">Pilih Layanan Kalago</h3>
+
+                    <!-- Service Tabs -->
+                    <div class="grid grid-cols-5 gap-1.5">
+                        <button type="button" onclick="selectService('makanan')" id="btnCat-makanan" class="service-tab-btn p-2 bg-white border-2 border-brand-600 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm transition-all">
+                            <span class="text-xl mb-1">🍔</span>
+                            <span class="text-[10px] font-extrabold text-slate-800">Makanan</span>
+                        </button>
+                        <button type="button" onclick="selectService('minuman')" id="btnCat-minuman" class="service-tab-btn p-2 bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm transition-all">
+                            <!-- Blue Drink Icon Graphic -->
+                            <div class="w-7 h-7 mb-1 bg-gradient-to-b from-sky-300 via-blue-500 to-brand-600 rounded-b-xl rounded-t-sm flex items-center justify-center shadow-sm relative overflow-hidden border border-sky-200">
+                                <div class="absolute top-0.5 w-full h-1 bg-white/40"></div>
+                                <i class="fa-solid fa-glass-water text-white text-xs drop-shadow-sm"></i>
+                            </div>
+                            <span class="text-[10px] font-extrabold text-slate-800">Minuman</span>
+                        </button>
+                        <button type="button" onclick="selectService('belanja')" id="btnCat-belanja" class="service-tab-btn p-2 bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm transition-all">
+                            <span class="text-xl mb-1">🛒</span>
+                            <span class="text-[10px] font-extrabold text-slate-800">Belanja</span>
+                        </button>
+                        <button type="button" onclick="selectService('jastip')" id="btnCat-jastip" class="service-tab-btn p-2 bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm transition-all">
+                            <span class="text-xl mb-1">📦</span>
+                            <span class="text-[10px] font-extrabold text-slate-800">Titip Paket</span>
+                        </button>
+                        <button type="button" onclick="selectService('ojek')" id="btnCat-ojek" class="service-tab-btn p-2 bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm transition-all">
+                            <span class="text-xl mb-1">🛵</span>
+                            <span class="text-[10px] font-extrabold text-slate-800">Antar/Jemput</span>
+                        </button>
+                    </div>
+
+                    <!-- INPUT FORM SECTION (CLEAN GOJEK STYLE) -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                        
+                        <!-- Customer Name Input -->
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-600 block mb-1">Nama Pemesan</label>
+                            <input type="text" id="custName" placeholder="Contoh: Budi / Kamar Kos 102" 
+                                class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:bg-white focus:outline-none">
+                        </div>
+
+                        <!-- Customer Delivery Address Input -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[11px] font-bold text-slate-600">Alamat Pemesan / Tujuan Pengiriman</label>
+                                <button type="button" onclick="openMapModal('dropoff')" class="text-[10px] font-extrabold text-brand-600 flex items-center gap-1">
+                                    <i class="fa-solid fa-map-pin"></i> Maps
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <textarea id="custAddress" rows="2" 
+                                    oninput="searchAddressAutocomplete(this.value, 'dropoff', 'custAddressSuggestions')"
+                                    placeholder="Contoh: Jalan Kenanga No. 12, Kos Mawar Kamar 05, atau ketik nama lokasi..." 
+                                    class="w-full p-2.5 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:bg-white focus:outline-none"></textarea>
+                                <i class="fa-solid fa-location-crosshairs text-brand-600 absolute right-2.5 top-3 text-sm cursor-pointer" onclick="openMapModal('dropoff')" title="Pilih titik lokasi di peta"></i>
+                                
+                                <div id="custAddressSuggestions" class="autocomplete-suggestions hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Forms -->
+                        <!-- FORM MAKANAN -->
+                        <div id="form-makanan" class="service-form space-y-3">
+                            <div class="border-b pb-1.5 flex items-center justify-between">
+                                <span class="text-xs font-black text-brand-600 uppercase flex items-center gap-1.5">
+                                    <i class="fa-solid fa-utensils"></i> Order Makanan
+                                </span>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nama Makanan & Pilihan Menu</label>
+                                <input type="text" id="foodName" placeholder="Contoh: Nasi Goreng Spesial Pak Edi" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[11px] font-bold text-slate-600 block mb-1">Kuantitas / Jumlah</label>
+                                    <input type="number" id="foodQty" placeholder="Jumlah (misal: 1)" min="1" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-[11px] font-bold text-slate-600 block mb-1">Estimasi Harga Satuan (Rp)</label>
+                                    <input type="number" id="foodPriceEst" placeholder="Isi harga satuan" min="0" step="500" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Alamat / Area Toko / Warung Makan</label>
+                                    <button type="button" onclick="openMapModal('pickup')" class="text-[10px] font-extrabold text-brand-600 flex items-center gap-1">
+                                        <i class="fa-solid fa-map-location-dot"></i> Maps
+                                    </button>
+                                </div>
+                                <input type="text" id="pickupAddress-makanan" 
+                                    oninput="searchAddressAutocomplete(this.value, 'pickup', 'pickupAddressMakananSuggestions')"
+                                    placeholder="Contoh: Warung Makan Pak Edi Kampus / Ketik nama jalan..." class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                <div id="pickupAddressMakananSuggestions" class="autocomplete-suggestions hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- FORM MINUMAN -->
+                        <div id="form-minuman" class="service-form space-y-3 hidden">
+                            <div class="border-b pb-1.5 flex items-center justify-between">
+                                <span class="text-xs font-black text-sky-600 uppercase flex items-center gap-1.5">
+                                    <i class="fa-solid fa-glass-water"></i> Order Minuman
+                                </span>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nama Minuman</label>
+                                <input type="text" id="drinkName" placeholder="Contoh: Es Teh Solo Jumbo / Kopi Aren" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[11px] font-bold text-slate-600 block mb-1">Kuantitas / Jumlah</label>
+                                    <input type="number" id="drinkQty" placeholder="Jumlah (misal: 1)" min="1" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-[11px] font-bold text-slate-600 block mb-1">Estimasi Harga Satuan (Rp)</label>
+                                    <input type="number" id="drinkPriceEst" placeholder="Isi harga satuan" min="0" step="500" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Alamat / Area Toko Minuman</label>
+                                    <button type="button" onclick="openMapModal('pickup')" class="text-[10px] font-extrabold text-brand-600 flex items-center gap-1">
+                                        <i class="fa-solid fa-map-location-dot"></i> Maps
+                                    </button>
+                                </div>
+                                <input type="text" id="pickupAddress-minuman" 
+                                    oninput="searchAddressAutocomplete(this.value, 'pickup', 'pickupAddressMinumanSuggestions')"
+                                    placeholder="Contoh: Outlet Es Teh Kampus" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                <div id="pickupAddressMinumanSuggestions" class="autocomplete-suggestions hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- FORM BELANJA -->
+                        <div id="form-belanja" class="service-form space-y-3 hidden">
+                            <div class="border-b pb-1.5 flex items-center justify-between">
+                                <span class="text-xs font-black text-emerald-600 uppercase flex items-center gap-1.5">
+                                    <i class="fa-solid fa-cart-shopping"></i> Order Belanja Goods
+                                </span>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nama Barang / Belanjaan</label>
+                                <input type="text" id="storeGoods" placeholder="Contoh: Air Galon / Sabun / Indomie 1 Dus" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[11px] font-bold text-slate-600 block mb-1">Kuantitas / Jumlah</label>
+                                    <input type="number" id="storeQty" placeholder="Jumlah (misal: 1)" min="1" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-[11px] font-bold text-slate-600 block mb-1">Estimasi Total Belanja (Rp)</label>
+                                    <input type="number" id="storePriceEst" placeholder="Isi total belanja" min="0" step="1000" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Nama Toko / Minimarket Penjemputan</label>
+                                    <button type="button" onclick="openMapModal('pickup')" class="text-[10px] font-extrabold text-brand-600 flex items-center gap-1">
+                                        <i class="fa-solid fa-map-location-dot"></i> Maps
+                                    </button>
+                                </div>
+                                <input type="text" id="pickupAddress-belanja" 
+                                    oninput="searchAddressAutocomplete(this.value, 'pickup', 'pickupAddressBelanjaSuggestions')"
+                                    placeholder="Contoh: Indomaret Kampus / Toko Kelontong Bu Sri" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                <div id="pickupAddressBelanjaSuggestions" class="autocomplete-suggestions hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- FORM TITIP PAKET -->
+                        <div id="form-jastip" class="service-form space-y-3 hidden">
+                            <div class="border-b pb-1.5 flex items-center justify-between">
+                                <span class="text-xs font-black text-purple-600 uppercase flex items-center gap-1.5">
+                                    <i class="fa-solid fa-box font-bold"></i> Titip / Ambil Paket
+                                </span>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nama / Jenis Barang Paket</label>
+                                <input type="text" id="parcelName" placeholder="Contoh: Paket Shopee J&T a.n Budi" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Estimasi Berat (kg)</label>
+                                <input type="number" id="parcelWeight" placeholder="Isi estimasi berat (kg)" min="0.5" step="0.5" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+                            <div class="relative">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Alamat Titik Ambil Paket / Ekspedisi</label>
+                                    <button type="button" onclick="openMapModal('pickup')" class="text-[10px] font-extrabold text-brand-600 flex items-center gap-1">
+                                        <i class="fa-solid fa-map-location-dot"></i> Maps
+                                    </button>
+                                </div>
+                                <input type="text" id="pickupAddress-jastip" 
+                                    oninput="searchAddressAutocomplete(this.value, 'pickup', 'pickupAddressJastipSuggestions')"
+                                    placeholder="Contoh: Agen J&T / Pos Satpam Kampus" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                <div id="pickupAddressJastipSuggestions" class="autocomplete-suggestions hidden"></div>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Foto Barang Paket (Opsional)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="file" id="parcelImage" accept="image/*" onchange="previewParcelImage(event)" class="hidden">
+                                    <button type="button" onclick="document.getElementById('parcelImage').click()" class="bg-slate-100 border border-dashed border-slate-300 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 px-3 rounded-xl flex items-center gap-2 transition-colors">
+                                        <i class="fa-solid fa-camera text-brand-600"></i>
+                                        <span>Upload Foto</span>
+                                    </button>
+                                    <span id="parcelImgFileName" class="text-[10px] text-slate-400 truncate max-w-[150px]">Belum ada foto</span>
+                                </div>
+                                <div id="parcelImagePreviewBox" class="mt-2 hidden">
+                                    <img id="parcelImagePreview" src="" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FORM OJEK ANTAR JEMPUT -->
+                        <div id="form-ojek" class="service-form space-y-3 hidden">
+                            <div class="border-b pb-1.5 flex items-center justify-between">
+                                <span class="text-xs font-black text-amber-600 uppercase flex items-center gap-1.5">
+                                    <i class="fa-solid fa-motorcycle"></i> Antar / Jemput Orang
+                                </span>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Jumlah Penumpang</label>
+                                <select id="ojekPassengers" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                    <option value="1 Orang">1 Orang</option>
+                                    <option value="2 Orang (2 Motor)">2 Orang (Butuh 2 Motor)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Jam Penjemputan</label>
+                                <input type="text" id="ojekTime" placeholder="Contoh: Sekarang / Jam 16:00 WIB" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+                            <div class="relative">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Alamat Penjemputan Penumpang</label>
+                                    <button type="button" onclick="openMapModal('pickup')" class="text-[10px] font-extrabold text-brand-600 flex items-center gap-1">
+                                        <i class="fa-solid fa-map-location-dot"></i> Maps
+                                    </button>
+                                </div>
+                                <input type="text" id="pickupAddress-ojek" 
+                                    oninput="searchAddressAutocomplete(this.value, 'pickup', 'pickupAddressOjekSuggestions')"
+                                    placeholder="Contoh: Depan Stasiun / Gerbang Kos" class="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                <div id="pickupAddressOjekSuggestions" class="autocomplete-suggestions hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- BUTTON TO CALCULATE AND TRIGGER PAYMENT DETAILS -->
+                        <button type="button" onclick="calculateAndShowCheckout()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 transition-transform active:scale-98 text-sm">
+                            <i class="fa-solid fa-calculator"></i>
+                            <span>Cek Total & Lanjut Pembayaran</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC CHECKOUT & PAYMENT SECTION (HIDDEN UNTIL USER CLICKS 'CEK TOTAL & LANJUT') -->
+                <div id="checkoutSummarySection" class="hidden space-y-4 pt-2 border-t border-slate-200">
+                    
+                    <!-- REAL-TIME PAYMENT & DISTANCE SUMMARY CARD -->
+                    <div class="bg-gradient-to-br from-slate-900 via-brand-950 to-slate-900 text-white p-4 rounded-2xl shadow-xl space-y-3 border border-slate-800">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <span class="text-xs font-black uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-receipt"></i> Rincian Total Payment
+                            </span>
+                            <span id="calculatedDistanceBadge" class="text-[10px] bg-sky-500/20 text-sky-300 border border-sky-400/30 px-2 py-0.5 rounded font-black">
+                                Jarak: 1.2 km
+                            </span>
+                        </div>
+
+                        <div class="space-y-1.5 text-xs font-medium text-slate-300">
+                            <div class="flex justify-between">
+                                <span>Estimasi Harga Barang / Pesanan</span>
+                                <span id="breakdownEstItem" class="font-bold text-white">Rp 15.000</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Jarak Rute (Dari Pos Driver)</span>
+                                <span id="breakdownDistance" class="font-bold text-sky-300">1.2 km</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Ongkir Kalago (Flat / Terjangkau)</span>
+                                <span id="breakdownDeliveryFee" class="font-bold text-emerald-400">Rp 7.000</span>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800/80">
+                                <span>Perkiraan Aplikasi Lain (Gojek/Shopee)</span>
+                                <span id="competitorEstFee" class="line-through text-slate-400">~Rp 12.000</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-800 pt-2 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] uppercase font-black text-slate-400 block leading-tight">Total Harus Dibayar</span>
+                                <span id="finalTotalPaymentDisplay" class="text-lg font-black text-sky-400">Rp 22.000</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-emerald-500 text-slate-950 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow">
+                                    Hemat <span id="savedAmountText">Rp 5.000</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PAYMENT TOGGLE AND NOTES -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                        <h4 class="text-xs font-extrabold text-slate-900 border-b pb-1.5">Pilih Metode Pembayaran & Catatan</h4>
+
+                        <!-- Toggle Buttons -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setPayment('CASH')" id="payBtn-CASH" class="pay-toggle-btn p-2.5 border-2 border-brand-600 bg-brand-50 text-brand-700 rounded-xl font-bold text-xs flex flex-col items-center gap-1 transition-all">
+                                <i class="fa-solid fa-hand-holding-dollar text-base"></i>
+                                <span>CASH</span>
+                            </button>
+                            <button type="button" onclick="setPayment('QRIS')" id="payBtn-QRIS" class="pay-toggle-btn p-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs flex flex-col items-center gap-1 transition-all">
+                                <i class="fa-solid fa-qrcode text-base"></i>
+                                <span>QRIS</span>
+                            </button>
+                            <button type="button" onclick="setPayment('TRANSFER')" id="payBtn-TRANSFER" class="pay-toggle-btn p-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs flex flex-col items-center gap-1 transition-all">
+                                <i class="fa-solid fa-building-columns text-base"></i>
+                                <span>TRANSFER</span>
+                            </button>
+                        </div>
+
+                        <!-- Dynamic Payment Details -->
+                        <div id="paymentDetailsArea" class="mt-2">
+                            <!-- CASH -->
+                            <div id="payDetails-CASH" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-money-bill-wave text-brand-600 text-base"></i>
+                                <span>Bayar tunai/cash langsung ke Driver saat pesanan sampai.</span>
+                            </div>
+
+                            <!-- QRIS DISPLAY -->
+                            <div id="payDetails-QRIS" class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-slate-800 space-y-2 hidden">
+                                <div class="flex items-center justify-between border-b border-blue-200/80 pb-1.5">
+                                    <span class="font-bold text-blue-900 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-qrcode text-brand-600"></i> Scan QRIS Kalago
+                                    </span>
+                                    <span class="text-[10px] bg-blue-200/80 font-black text-blue-900 px-2 py-0.5 rounded-full">All E-Wallet / Bank</span>
+                                </div>
+                                <div class="flex flex-col items-center justify-center p-2 bg-white rounded-xl border border-blue-200 shadow-sm">
+                                    <img src="https://lh3.googleusercontent.com/d/1a9XNshH024S9_fR-Wd1X_x9-Z-0" alt="QRIS Kalago" class="w-56 h-auto max-w-full rounded-lg shadow-sm border border-slate-100">
+                                </div>
+                                <p class="text-[10px] text-center text-slate-500 font-medium">Scan QRIS di atas dengan Gopay, ShopeePay, Dana, OVO, atau Mobile Banking.</p>
+                            </div>
+
+                            <!-- BANK TRANSFER DISPLAY -->
+                            <div id="payDetails-TRANSFER" class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-slate-800 space-y-2 hidden">
+                                <div class="flex items-center justify-between border-b border-blue-200/80 pb-1.5">
+                                    <span class="font-bold text-blue-900 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-building-columns text-brand-600"></i> Rekening Bank Kalago
+                                    </span>
+                                    <span class="text-[10px] bg-blue-200/80 font-black text-blue-900 px-2 py-0.5 rounded-full">Bank BCA</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-blue-200 shadow-sm space-y-1">
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nomor Rekening BCA</div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-base font-black text-slate-900 tracking-wider font-mono">1570335959</span>
+                                        <button type="button" onclick="copyRekening('1570335959')" class="text-[10px] bg-blue-50 hover:bg-blue-100 text-brand-700 font-extrabold px-2.5 py-1 rounded-lg border border-blue-200 flex items-center gap-1 transition-colors">
+                                            <i class="fa-solid fa-copy"></i> Salin
+                                        </button>
+                                    </div>
+                                    <div class="text-[11px] font-extrabold text-slate-700 pt-1 border-t border-slate-100 mt-1">
+                                        Atas Nama: <span class="text-brand-800 font-black">Deka Aji Pranata</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-600 block mb-1">Catatan Tambahan untuk Driver</label>
+                            <textarea id="orderNotes" rows="2" placeholder="Contoh: Pedas sedang ya bang / Titip dipos gerbang kos..." 
+                                class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-600 focus:outline-none"></textarea>
+                        </div>
+
+                        <!-- FINAL SUBMIT ORDER BUTTON -->
+                        <button type="button" onclick="submitOrder()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition-transform active:scale-98 text-sm">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Kirim Pesanan Sekarang (ke Driver Kalago)</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DRIVER DASHBOARD VIEW -->
+        <div id="courierDashboardView" class="hidden">
+            <header class="sticky top-0 z-30 bg-slate-900 text-white p-4 shadow-md flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brand-600 text-white font-black rounded-xl flex items-center justify-center text-sm shadow">
+                        <i class="fa-solid fa-motorcycle"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-black text-sm">Panel Driver Kalago</h2>
+                        <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Standby Order
+                        </span>
+                    </div>
+                </div>
+                <button onclick="exitDriverDashboard()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-xl border border-slate-700">
+                    <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Keluar
+                </button>
+            </header>
+
+            <div class="p-4 space-y-4">
+
+                <!-- TRACKER METRICS -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                        <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Pesanan</span>
+                        <span id="metricTotalOrders" class="text-lg font-black text-slate-900">0</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                        <span class="text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider block">Selesai Today</span>
+                        <span id="metricDoneOrders" class="text-lg font-black text-emerald-600">0</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                        <span class="text-[9px] font-extrabold text-brand-600 uppercase tracking-wider block">Pemasukan</span>
+                        <span id="metricRevenue" class="text-xs font-black text-brand-600 block mt-1">Rp 0</span>
+                    </div>
+                </div>
+
+                <!-- ORDERS LIST -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check text-brand-600"></i>
+                            <span>Daftar Pesanan Masuk Hari Ini</span>
+                        </h3>
+                        <button onclick="clearCompletedOrders()" class="text-[10px] font-bold text-red-500 hover:underline">
+                            Hapus Selesai
+                        </button>
+                    </div>
+
+                    <div id="courierOrderList" class="space-y-3">
+                        <!-- Dynamic Driver Orders Rendered Here -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAP MODAL -->
+    <div id="mapModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-4 space-y-3 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <h3 id="mapModalTitle" class="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                    <i class="fa-solid fa-map-pin text-brand-600"></i> Tentukan Titik di Maps
+                </h3>
+                <button onclick="closeMapModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div id="leafletMap"></div>
+            
+            <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-bold">
+                <span class="text-slate-600">Jarak Rute Dihitung:</span>
+                <span id="modalDistanceOutput" class="text-brand-600 font-black">1.2 km</span>
+            </div>
+
+            <button onclick="confirmMapLocation()" class="w-full bg-slate-900 text-white font-extrabold py-2.5 rounded-xl text-xs hover:bg-slate-800 transition-colors">
+                Gunakan Lokasi Ini
+            </button>
+        </div>
+    </div>
+
+    <!-- DRIVER LOGIN MODAL -->
+    <div id="courierLoginModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-5 space-y-4 shadow-2xl text-center">
+            <div class="w-12 h-12 bg-blue-100 text-brand-600 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-base">Akses Driver Ready</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Masukkan password driver untuk kelola pesanan.</p>
+            </div>
+            <div>
+                <input type="password" id="courierPassInput" placeholder="Password (default: kalago123)" 
+                    class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-center font-bold focus:ring-2 focus:ring-brand-600 focus:outline-none">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="closeDriverLoginModal()" class="w-1/2 bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs hover:bg-slate-200">
+                    Batal
+                </button>
+                <button onclick="verifyDriverPass()" class="w-1/2 bg-brand-600 text-white font-bold py-2.5 rounded-xl text-xs hover:bg-brand-700">
+                    Masuk
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // APP STATE
+        let activeService = 'makanan';
+        let activePayment = 'CASH';
+        let orders = JSON.parse(localStorage.getItem('kalago_orders') || '[]');
+        let uploadedParcelImageBase64 = '';
+        
+        // Map States
+        let map = null;
+        let pickupMarker = null;
+        let dropoffMarker = null;
+        let mapTargetMode = 'dropoff';
+
+        // Default Lat/Lng Coordinates
+        let pickupCoords = { lat: -6.2383, lng: 106.9756 };
+        let dropoffCoords = { lat: -6.2483, lng: 106.9856 };
+        let currentCalculatedDistance = 1.2;
+
+        let calculatedItemPrice = 15000;
+        let calculatedDeliveryFee = 7000;
+        let calculatedTotalPayment = 22000;
+
+        let autocompleteDebounceTimer = null;
+
+        function searchAddressAutocomplete(query, targetMode, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (!query || query.trim().length < 3) {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            clearTimeout(autocompleteDebounceTimer);
+            autocompleteDebounceTimer = setTimeout(() => {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&countrycodes=id`;
+                
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        container.innerHTML = '';
+                        if (!data || data.length === 0) {
+                            container.classList.add('hidden');
+                            return;
+                        }
+
+                        data.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-item';
+                            div.innerHTML = `<i class="fa-solid fa-location-dot text-brand-600 mr-1.5"></i> ${item.display_name}`;
+                            div.onclick = () => selectAutocompleteAddress(item, targetMode, containerId);
+                            container.appendChild(div);
+                        });
+
+                        container.classList.remove('hidden');
+                    })
+                    .catch(err => {
+                        console.error('Error fetching address suggestions:', err);
+                        container.classList.add('hidden');
+                    });
+            }, 350);
+        }
+
+        function selectAutocompleteAddress(placeData, targetMode, containerId) {
+            const lat = parseFloat(placeData.lat);
+            const lon = parseFloat(placeData.lon);
+            const displayName = placeData.display_name;
+
+            if (targetMode === 'pickup') {
+                pickupCoords = { lat, lng: lon };
+                if (pickupMarker) pickupMarker.setLatLng([lat, lon]);
+                
+                const activePickupInput = document.getElementById(`pickupAddress-${activeService}`);
+                if (activePickupInput) {
+                    activePickupInput.value = displayName;
+                }
+            } else {
+                dropoffCoords = { lat, lng: lon };
+                if (dropoffMarker) dropoffMarker.setLatLng([lat, lon]);
+                document.getElementById('custAddress').value = displayName;
+            }
+
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+            }
+
+            if (map) {
+                map.setView([lat, lon], 15);
+            }
+
+            showToast('Lokasi dipilih & koordinat diperbarui!');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.relative')) {
+                document.querySelectorAll('.autocomplete-suggestions').forEach(el => el.classList.add('hidden'));
+            }
+        });
+
+        window.onload = function() {
+            renderDriverOrders();
+        };
+
+        function enterDashboard() {
+            document.getElementById('splashScreen').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+        }
+
+        function selectService(service) {
+            activeService = service;
+            document.querySelectorAll('.service-tab-btn').forEach(btn => {
+                btn.classList.remove('border-2', 'border-brand-600');
+                btn.classList.add('border-slate-200');
+            });
+            const activeBtn = document.getElementById(`btnCat-${service}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-slate-200');
+                activeBtn.classList.add('border-2', 'border-brand-600');
+            }
+
+            document.querySelectorAll('.service-form').forEach(form => form.classList.add('hidden'));
+            const targetForm = document.getElementById(`form-${service}`);
+            if (targetForm) targetForm.classList.remove('hidden');
+
+            document.getElementById('checkoutSummarySection').classList.add('hidden');
+        }
+
+        function setPayment(method) {
+            activePayment = method;
+            document.querySelectorAll('.pay-toggle-btn').forEach(btn => {
+                btn.classList.remove('border-2', 'border-brand-600', 'bg-brand-50', 'text-brand-700');
+                btn.classList.add('border-slate-200', 'text-slate-600');
+            });
+            const activePayBtn = document.getElementById(`payBtn-${method}`);
+            if (activePayBtn) {
+                activePayBtn.classList.remove('border-slate-200', 'text-slate-600');
+                activePayBtn.classList.add('border-2', 'border-brand-600', 'bg-brand-50', 'text-brand-700');
+            }
+
+            document.getElementById('payDetails-CASH').classList.add('hidden');
+            document.getElementById('payDetails-QRIS').classList.add('hidden');
+            document.getElementById('payDetails-TRANSFER').classList.add('hidden');
+
+            const targetDetail = document.getElementById(`payDetails-${method}`);
+            if (targetDetail) targetDetail.classList.remove('hidden');
+        }
+
+        function copyRekening(accNumber) {
+            const tempInput = document.createElement('input');
+            tempInput.value = accNumber;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('Nomor rekening BCA berhasil disalin!');
+        }
+
+        function previewParcelImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedParcelImageBase64 = e.target.result;
+                    document.getElementById('parcelImagePreview').src = e.target.result;
+                    document.getElementById('parcelImagePreviewBox').classList.remove('hidden');
+                    document.getElementById('parcelImgFileName').innerText = file.name;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth radius in KM
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const d = R * c;
+            return Math.max(0.5, parseFloat(d.toFixed(1)));
+        }
+
+        function calculateAndShowCheckout() {
+            const custName = document.getElementById('custName').value.trim();
+            const custAddress = document.getElementById('custAddress').value.trim();
+
+            if (!custName) {
+                alert('Mohon isi Nama Pemesan terlebih dahulu!');
+                return;
+            }
+
+            if (!custAddress) {
+                alert('Mohon isi Alamat Pemesan / Tujuan Pengiriman!');
+                return;
+            }
+
+            let pickupAddrVal = '';
+            if (activeService === 'makanan') {
+                const name = document.getElementById('foodName').value.trim();
+                pickupAddrVal = document.getElementById('pickupAddress-makanan').value.trim();
+                if (!name) return alert('Isi nama makanan!');
+                
+                const priceInput = document.getElementById('foodPriceEst').value;
+                const qtyInput = document.getElementById('foodQty').value;
+                if (!qtyInput || parseInt(qtyInput) <= 0) return alert('Mohon isi kuantitas makanan yang valid!');
+                if (priceInput === '' || parseFloat(priceInput) < 0) return alert('Mohon isi estimasi harga makanan!');
+            } else if (activeService === 'minuman') {
+                const name = document.getElementById('drinkName').value.trim();
+                pickupAddrVal = document.getElementById('pickupAddress-minuman').value.trim();
+                if (!name) return alert('Isi nama minuman!');
+
+                const priceInput = document.getElementById('drinkPriceEst').value;
+                const qtyInput = document.getElementById('drinkQty').value;
+                if (!qtyInput || parseInt(qtyInput) <= 0) return alert('Mohon isi kuantitas minuman yang valid!');
+                if (priceInput === '' || parseFloat(priceInput) < 0) return alert('Mohon isi estimasi harga minuman!');
+            } else if (activeService === 'belanja') {
+                const name = document.getElementById('storeGoods').value.trim();
+                pickupAddrVal = document.getElementById('pickupAddress-belanja').value.trim();
+                if (!name) return alert('Isi barang belanjaan!');
+
+                const priceInput = document.getElementById('storePriceEst').value;
+                const qtyInput = document.getElementById('storeQty').value;
+                if (!qtyInput || parseInt(qtyInput) <= 0) return alert('Mohon isi kuantitas belanjaan yang valid!');
+                if (priceInput === '' || parseFloat(priceInput) < 0) return alert('Mohon isi estimasi total belanja!');
+            } else if (activeService === 'jastip') {
+                const name = document.getElementById('parcelName').value.trim();
+                pickupAddrVal = document.getElementById('pickupAddress-jastip').value.trim();
+                if (!name) return alert('Isi detail paket!');
+
+                const weightInput = document.getElementById('parcelWeight').value;
+                if (!weightInput || parseFloat(weightInput) <= 0) return alert('Mohon isi estimasi berat paket (kg)!');
+            } else if (activeService === 'ojek') {
+                pickupAddrVal = document.getElementById('pickupAddress-ojek').value.trim();
+            }
+
+            currentCalculatedDistance = calculateHaversineDistance(
+                pickupCoords.lat, pickupCoords.lng,
+                dropoffCoords.lat, dropoffCoords.lng
+            );
+
+            if (currentCalculatedDistance <= 3.0) {
+                calculatedDeliveryFee = 7000;
+            } else {
+                const extraKm = Math.ceil(currentCalculatedDistance - 3.0);
+                calculatedDeliveryFee = 7000 + (extraKm * 2000);
+            }
+
+            if (activeService === 'makanan') {
+                const price = parseFloat(document.getElementById('foodPriceEst').value) || 0;
+                const qty = parseInt(document.getElementById('foodQty').value) || 1;
+                calculatedItemPrice = price * qty;
+            } else if (activeService === 'minuman') {
+                const price = parseFloat(document.getElementById('drinkPriceEst').value) || 0;
+                const qty = parseInt(document.getElementById('drinkQty').value) || 1;
+                calculatedItemPrice = price * qty;
+            } else if (activeService === 'belanja') {
+                const price = parseFloat(document.getElementById('storePriceEst').value) || 0;
+                const qty = parseInt(document.getElementById('storeQty').value) || 1;
+                calculatedItemPrice = price * qty;
+            } else if (activeService === 'jastip') {
+                const weight = parseFloat(document.getElementById('parcelWeight').value) || 1;
+                calculatedItemPrice = Math.round(weight * 2000);
+            } else if (activeService === 'ojek') {
+                calculatedItemPrice = 0;
+            }
+
+            calculatedTotalPayment = calculatedItemPrice + calculatedDeliveryFee;
+
+            const competitorFee = calculatedDeliveryFee + 5000;
+            const savedAmount = competitorFee - calculatedDeliveryFee;
+
+            document.getElementById('calculatedDistanceBadge').innerText = `Jarak: ${currentCalculatedDistance} km`;
+            document.getElementById('breakdownDistance').innerText = `${currentCalculatedDistance} km`;
+            document.getElementById('modalDistanceOutput').innerText = `${currentCalculatedDistance} km`;
+            document.getElementById('breakdownEstItem').innerText = `Rp ${calculatedItemPrice.toLocaleString('id-ID')}`;
+            document.getElementById('breakdownDeliveryFee').innerText = `Rp ${calculatedDeliveryFee.toLocaleString('id-ID')}`;
+            document.getElementById('competitorEstFee').innerText = `~Rp ${(calculatedItemPrice + competitorFee).toLocaleString('id-ID')}`;
+            document.getElementById('finalTotalPaymentDisplay').innerText = `Rp ${calculatedTotalPayment.toLocaleString('id-ID')}`;
+            document.getElementById('savedAmountText').innerText = `Rp ${savedAmount.toLocaleString('id-ID')}`;
+
+            document.getElementById('checkoutSummarySection').classList.remove('hidden');
+            document.getElementById('checkoutSummarySection').scrollIntoView({ behavior: 'smooth' });
+            showToast('Rincian total payment berhasil dihitung!');
+        }
+
+        // MAP MODAL LOGIC
+        function openMapModal(mode) {
+            mapTargetMode = mode;
+            document.getElementById('mapModalTitle').innerText = mode === 'pickup' ? 
+                'Tentukan Lokasi Penjemputan' : 'Tentukan Lokasi Tujuan Pengiriman';
+
+            document.getElementById('mapModal').classList.remove('hidden');
+
+            if (!map) {
+                setTimeout(() => {
+                    map = L.map('leafletMap').setView([pickupCoords.lat, pickupCoords.lng], 14);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+                    pickupMarker = L.marker([pickupCoords.lat, pickupCoords.lng], { draggable: true }).addTo(map);
+                    dropoffMarker = L.marker([dropoffCoords.lat, dropoffCoords.lng], { draggable: true }).addTo(map);
+
+                    map.on('click', function(e) {
+                        if (mapTargetMode === 'pickup') {
+                            pickupCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+                            pickupMarker.setLatLng(e.latlng);
+                        } else {
+                            dropoffCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+                            dropoffMarker.setLatLng(e.latlng);
+                        }
+                    });
+
+                    pickupMarker.on('dragend', function() {
+                        const pos = pickupMarker.getLatLng();
+                        pickupCoords = { lat: pos.lat, lng: pos.lng };
+                    });
+
+                    dropoffMarker.on('dragend', function() {
+                        const pos = dropoffMarker.getLatLng();
+                        dropoffCoords = { lat: pos.lat, lng: pos.lng };
+                    });
+                }, 200);
+            }
+        }
+
+        function closeMapModal() {
+            document.getElementById('mapModal').classList.add('hidden');
+        }
+
+        function confirmMapLocation() {
+            if (mapTargetMode === 'pickup') {
+                const locText = `Maps Penjemputan (${pickupCoords.lat.toFixed(4)}, ${pickupCoords.lng.toFixed(4)})`;
+                if (document.getElementById(`pickupAddress-${activeService}`)) {
+                    document.getElementById(`pickupAddress-${activeService}`).value = locText;
+                }
+            } else {
+                const locText = `Maps Tujuan (${dropoffCoords.lat.toFixed(4)}, ${dropoffCoords.lng.toFixed(4)})`;
+                const curr = document.getElementById('custAddress').value;
+                document.getElementById('custAddress').value = curr ? `${curr} [${locText}]` : locText;
+            }
+            closeMapModal();
+            showToast('Lokasi peta diperbarui!');
+        }
+
+        // SUBMIT ORDER TO DRIVER
+        function submitOrder() {
+            const custName = document.getElementById('custName').value.trim();
+            const custAddress = document.getElementById('custAddress').value.trim();
+            const notes = document.getElementById('orderNotes').value.trim();
+
+            let pickupAddress = document.getElementById(`pickupAddress-${activeService}`) ? 
+                document.getElementById(`pickupAddress-${activeService}`).value.trim() : 'Lokasi Toko/Penjemputan';
+
+            let itemDetails = {};
+            let orderTitle = "";
+
+            if (activeService === 'makanan') {
+                const foodName = document.getElementById('foodName').value.trim();
+                const foodQty = document.getElementById('foodQty').value;
+                orderTitle = `[MAKANAN] ${foodName} (${foodQty}x)`;
+                itemDetails = { foodName, foodQty };
+            } else if (activeService === 'minuman') {
+                const drinkName = document.getElementById('drinkName').value.trim();
+                const drinkQty = document.getElementById('drinkQty').value;
+                orderTitle = `[MINUMAN] ${drinkName} (${drinkQty}x)`;
+                itemDetails = { drinkName, drinkQty };
+            } else if (activeService === 'belanja') {
+                const storeGoods = document.getElementById('storeGoods').value.trim();
+                const storeQty = document.getElementById('storeQty').value;
+                orderTitle = `[BELANJA] ${storeGoods} (${storeQty}x)`;
+                itemDetails = { storeGoods, storeQty };
+            } else if (activeService === 'jastip') {
+                const parcelName = document.getElementById('parcelName').value.trim();
+                const parcelWeight = document.getElementById('parcelWeight').value;
+                orderTitle = `[TITIP PAKET] ${parcelName} (${parcelWeight || 1}kg)`;
+                itemDetails = { parcelName, parcelWeight, image: uploadedParcelImageBase64 };
+            } else if (activeService === 'ojek') {
+                const passengers = document.getElementById('ojekPassengers').value;
+                const time = document.getElementById('ojekTime').value.trim();
+                orderTitle = `[DRIVER OJEK] Antar/Jemput ${passengers} (${time || 'Sekarang'})`;
+                itemDetails = { passengers, time };
+            }
+
+            const newOrder = {
+                id: 'KLG-' + Date.now().toString().slice(-5),
+                customerName: custName,
+                pickupAddress: pickupAddress || 'Sesuai Toko',
+                customerAddress: custAddress,
+                serviceType: activeService,
+                orderTitle: orderTitle,
+                details: itemDetails,
+                distanceKm: currentCalculatedDistance,
+                itemPrice: calculatedItemPrice,
+                deliveryFee: calculatedDeliveryFee,
+                totalPayment: calculatedTotalPayment,
+                paymentMethod: activePayment,
+                notes: notes || '-',
+                status: 'PENDING',
+                time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            orders.unshift(newOrder);
+            localStorage.setItem('kalago_orders', JSON.stringify(orders));
+
+            renderDriverOrders();
+            showToast('Pesanan dikirim ke Driver Kalago!');
+
+            if (confirm(`Pesanan berhasil! Total Payment: Rp ${calculatedTotalPayment.toLocaleString('id-ID')}. Terhubung langsung ke WhatsApp Driver?`)) {
+                const waMsg = `*PESANAN BARU KALAGO (${newOrder.id})*\n\n` +
+                    `👤 Nama Pemesan: ${newOrder.customerName}\n` +
+                    `🏪 Penjemputan: ${newOrder.pickupAddress}\n` +
+                    `📍 Alamat Pemesan (Tujuan): ${newOrder.customerAddress}\n` +
+                    `🛒 Pesanan: ${newOrder.orderTitle}\n` +
+                    `📏 Jarak: ${newOrder.distanceKm} km\n` +
+                    `💰 Total Payment: Rp ${newOrder.totalPayment.toLocaleString('id-ID')} (Ongkir: Rp ${newOrder.deliveryFee.toLocaleString('id-ID')})\n` +
+                    `💳 Bayar Via: ${newOrder.paymentMethod}\n` +
+                    `📝 Catatan: ${newOrder.notes}`;
+                window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(waMsg)}`, '_blank');
+            }
+        }
+
+        // DRIVER ACCESS MODAL
+        function openDriverLoginModal() {
+            document.getElementById('courierLoginModal').classList.remove('hidden');
+        }
+        function closeDriverLoginModal() {
+            document.getElementById('courierLoginModal').classList.add('hidden');
+        }
+        function verifyDriverPass() {
+            const pass = document.getElementById('courierPassInput').value;
+            if (pass === 'kalago123' || pass === '') {
+                closeDriverLoginModal();
+                document.getElementById('customerDashboardView').classList.add('hidden');
+                document.getElementById('courierDashboardView').classList.remove('hidden');
+                renderDriverOrders();
+                showToast('Login Driver Berhasil!');
+            } else {
+                alert('Password Driver Salah! (Gunakan: kalago123)');
+            }
+        }
+        function exitDriverDashboard() {
+            document.getElementById('courierDashboardView').classList.add('hidden');
+            document.getElementById('customerDashboardView').classList.remove('hidden');
+        }
+
+        // RENDER DRIVER DASHBOARD
+        function renderDriverOrders() {
+            const listContainer = document.getElementById('courierOrderList');
+            if (!listContainer) return;
+
+            listContainer.innerHTML = '';
+            let totalDone = 0;
+            let totalRev = 0;
+
+            orders.forEach(ord => {
+                if (ord.status === 'DONE') {
+                    totalDone++;
+                    totalRev += (ord.deliveryFee || 7000);
+                }
+            });
+
+            document.getElementById('metricTotalOrders').innerText = orders.length;
+            document.getElementById('metricDoneOrders').innerText = totalDone;
+            document.getElementById('metricRevenue').innerText = `Rp ${totalRev.toLocaleString('id-ID')}`;
+
+            if (orders.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 bg-white rounded-2xl border">
+                        <i class="fa-solid fa-inbox text-3xl mb-2"></i>
+                        <p class="text-xs">Belum ada pesanan masuk hari ini.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            orders.forEach((ord, index) => {
+                const isDone = ord.status === 'DONE';
+                const card = document.createElement('div');
+                card.className = `p-3.5 rounded-2xl border transition-all ${isDone ? 'bg-emerald-50/50 border-emerald-200 opacity-75' : 'bg-white border-slate-200 shadow-sm'}`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b pb-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black px-2 py-0.5 rounded-md ${isDone ? 'bg-emerald-200 text-emerald-800' : 'bg-blue-100 text-brand-800'}">
+                                ${ord.id}
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-bold"><i class="fa-regular fa-clock"></i> ${ord.time}</span>
+                        </div>
+                        <span class="text-xs font-black text-emerald-600">Total Rp ${(ord.totalPayment || 22000).toLocaleString('id-ID')}</span>
+                    </div>
+
+                    <div class="space-y-1 text-xs">
+                        <div class="font-bold text-slate-900 flex items-center justify-between">
+                            <span>${ord.customerName}</span>
+                            <span class="text-[10px] font-extrabold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">${ord.paymentMethod}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 font-medium">🏪 Jemput: ${ord.pickupAddress}</p>
+                        <p class="text-[11px] text-slate-600 font-medium">📍 Tujuan (Alamat Pemesan): ${ord.customerAddress}</p>
+                        <div class="bg-slate-50 p-2 rounded-xl text-[11px] font-bold text-slate-800 border mt-1 flex justify-between items-center">
+                            <span>${ord.orderTitle}</span>
+                            <span class="text-[10px] text-brand-600 font-black">${ord.distanceKm || 1.2} km (Ongkir Rp ${(ord.deliveryFee || 7000).toLocaleString('id-ID')})</span>
+                        </div>
+                        ${ord.details && ord.details.image ? `<img src="${ord.details.image}" class="w-16 h-16 rounded-lg object-cover mt-1 border">` : ''}
+                        <p class="text-[10px] text-slate-500 italic">Catatan: ${ord.notes}</p>
+                    </div>
+
+                    <div class="mt-3 pt-2 border-t flex justify-end">
+                        ${isDone ? `
+                            <span class="text-xs font-black text-emerald-600 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i> Selesai (Done)
+                            </span>
+                        ` : `
+                            <button onclick="markOrderDone(${index})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl shadow flex items-center gap-1.5">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Tandai Selesai (Done)</span>
+                            </button>
+                        `}
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function markOrderDone(index) {
+            orders[index].status = 'DONE';
+            localStorage.setItem('kalago_orders', JSON.stringify(orders));
+            renderDriverOrders();
+            showToast('Pesanan diselesaikan!');
+        }
+
+        function clearCompletedOrders() {
+            if (confirm('Hapus daftar pesanan yang sudah selesai?')) {
+                orders = orders.filter(o => o.status !== 'DONE');
+                localStorage.setItem('kalago_orders', JSON.stringify(orders));
+                renderDriverOrders();
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
